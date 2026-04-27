@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PetDelivery | Sistema de Gestão</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header class="main-header">
+    <div class="header-content">
+      <h1>🐾 PetDelivery</h1>
+      <p>Gestão de Atendimento em Domicílio</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="dashboard-grid">
+      
+      <aside class="sidebar">
+        
+        <section class="card">
+          <h2>📋 Cadastro de Tutor</h2>
+          <form id="formCadastro">
+            <div class="input-group">
+              <label for="nome">Nome Completo</label>
+              <input type="text" id="nome" placeholder="Ex: Maria Silva" required>
+            </div>
+            
+            <div class="input-row">
+              <div class="input-group">
+                <label for="telefone">WhatsApp</label>
+                <input type="tel" id="telefone" placeholder="(11) 99999-9999" required>
+              </div>
+              <div class="input-group">
+                <label for="cep">CEP</label>
+                <input type="text" id="cep" placeholder="01001-000" maxlength="9" required>
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label for="email">E-mail</label>
+              <input type="email" id="email" placeholder="contato@email.com" required>
+            </div>
+
+            <button type="submit" id="btnCadastrar" class="btn-primary">
+              Cadastrar Cliente
+            </button>
+          </form>
+
+          <div class="info-atendimento">
+            <small>📍 SP, RJ, BH, Curitiba e Porto Alegre.</small>
+          </div>
+        </section>
+
+        <section class="card" style="margin-top: 20px;">
+          <h2>📅 Novo Agendamento</h2>
+          <form id="formAgendamento">
+            <div class="input-group">
+              <label for="agenda_cliente_id">ID do Cliente Cadastrado</label>
+              <input type="number" id="agenda_cliente_id" placeholder="Ex: 12" required>
+            </div>
+
+            <div class="input-group">
+              <label for="agenda_servico">Serviço</label>
+              <select id="agenda_servico">
+                <option value="Banho e Tosa">Banho e Tosa</option>
+                <option value="Consulta Veterinária">Consulta Veterinária</option>
+                <option value="Adestramento">Adestramento</option>
+                <option value="Dog Walker">Dog Walker</option>
+              </select>
+            </div>
+
+            <div class="input-group">
+              <label for="agenda_data">Data e Hora</label>
+              <input type="datetime-local" id="agenda_data" required>
+            </div>
+
+            <button type="submit" class="btn-primary" style="background: var(--secondary);">
+              Confirmar Agendamento
+            </button>
+          </form>
+        </section>
+      </aside>
+
+      <section class="main-content">
+        <div class="card">
+          <div class="card-header">
+            <h2>📑 Lista de Agendamentos</h2>
+            <div class="filter-controls">
+              <input type="text" id="filtroServico" placeholder="Filtrar serviço...">
+              <button onclick="uiListar()" class="btn-search">🔍</button>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>Cliente</th>
+                  <th>Serviço</th>
+                  <th>Data/Hora</th>
+                </tr>
+              </thead>
+              <tbody id="tabelaAgendamentos">
+                <tr>
+                  <td colspan="3" style="text-align:center; color: #999; padding: 20px;">
+                    Clique na lupa para carregar os dados.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="card-footer">
+            <button onclick="uiDeletar()" class="btn-danger">
+              🗑️ Limpar Agendamentos Antigos
+            </button>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <script type="module" src="script.js"></script>
+
+  <script type="module">
+    import { listarAgendamentos, deletarAgendamentosAntigos } from './script.js';
+
+    // Função para Listar na Tabela
+    window.uiListar = async () => {
+      const servico = document.getElementById('filtroServico').value;
+      const tbody = document.getElementById('tabelaAgendamentos');
+      
+      tbody.innerHTML = '<tr><td colspan="3" style="text-align:center">Carregando...</td></tr>';
+
+      try {
+        const dados = await listarAgendamentos(servico);
+        
+        if (!dados || dados.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="3" style="text-align:center">Nenhum registro encontrado.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = dados.map(a => {
+          // Tenta pegar o nome do cliente se o relacionamento existir
+          const nomeExibicao = a.clientes ? a.clientes.nome : `ID: ${a.cliente_id}`;
+          
+          return `
+            <tr>
+              <td>
+                <strong>${nomeExibicao}</strong>
+                <br><small style="color: #999; font-size: 0.75rem;">Ref: #${a.id}</small>
+              </td>
+              <td><span class="tag">${a.servico}</span></td>
+              <td>${new Date(a.data_agendamento).toLocaleString('pt-BR')}</td>
+            </tr>
+          `;
+        }).join('');
+      } catch (err) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color: red;">Erro ao carregar dados.</td></tr>';
+        console.error(err);
+      }
+    };
+
+    // Função para Deletar Antigos
+    window.uiDeletar = async () => {
+      if(confirm("Deseja apagar permanentemente os agendamentos antigos?")) {
+        try {
+          await deletarAgendamentosAntigos();
+          alert("Limpeza concluída!");
+          window.uiListar();
+        } catch (err) {
+          alert("Erro ao deletar.");
+        }
+      }
+    };
+  </script>
+</body>
+</html>
