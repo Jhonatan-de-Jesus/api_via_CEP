@@ -1,5 +1,5 @@
-const SUPABASE_URL = "https://wmveuoeerfillhahimco.supabase.co";
-const SUPABASE_KEY = "sb_publishable_XblHgoTVicFryKf8maM_jg_8FQ4v-UD";
+const SUPABASE_URL = "SUA_SUPABASE_URL";
+const SUPABASE_KEY = "SUA_SUPABASE_KEY";
 
 const HEADERS = {
   "apikey": SUPABASE_KEY,
